@@ -1,4 +1,4 @@
-# NSFW games filter for SteamGifts
+# NSFW games filter for SteamGifts (beta)
 
 Usercript for SteamGifts.
 
