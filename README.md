@@ -2,7 +2,13 @@
 
 Usercript for SteamGifts.
 
-Adds a feature to hide giveaways of NSFW games on SteamGifts.
+Adds a feature to hide giveaways of NSFW games on SteamGifts:
+* Hide games with following content descriptors:
+   * "Some Nudity or Sexual Content"
+   * "Frequent Nudity or Sexual Content"
+   * "Adult Only Sexual Content"
+* Have NSFW developers blocklist *(currently empty, check [this](https://github.com/Xeloses/sg-nsfw-filter/discussions/1))*
+* Have NSFW publishers blocklist *(currently empty, check [this](https://github.com/Xeloses/sg-nsfw-filter/discussions/1))*
 
 Also shows count of giveaways of NSFW games on the current page.
 
