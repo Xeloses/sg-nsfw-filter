@@ -52,10 +52,6 @@
             '/giveaways/search': '.giveaway__row-outer-wrap', // Giveaways search
             '/search/giveaways': '.giveaway__row-outer-wrap'  // Giveaways search
         },
-        /* Pages matching beginning part of address (without domain) */
-        PagesMask: {
-            '/giveaway/': '.featured__outer-wrap' // Giveaway page
-        },
         /* Pages matching address by RegExp (without domain) */
         PagesRegex: {
             '^\\/user\\/[^\\/]+$': '.giveaway__row-outer-wrap', // User' giveaways
@@ -469,6 +465,5 @@
      * Main section.
      */
     for(const page in SG.Pages) if(location.pathname == page) return process(SG.Pages[page]);
-    for(const page in SG.PagesMask) if(location.pathname.startsWith(page)) return process(SG.PagesMask[page]);
     for(const page in SG.PagesRegex) if((new RegExp(page)).test(location.pathname)) return process(SG.PagesRegex[page]);
 })();
