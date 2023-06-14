@@ -91,7 +91,7 @@
     const Filter = {
         nsfw: {
             id: 'xnsfw_filter',
-            param: 'nsfw',
+            param: 'XelFilter:nsfw',
             param_values: {
                 on:  ['no','hide','off'],
                 off: ['yes','show','on']
@@ -274,46 +274,19 @@
      */
     function initFilter()
     {
-        if(url.searchParams.has(Filter.nsfw.param))
+        try
         {
-            let val = url.searchParams.get(Filter.nsfw.param).toLowerCase();
-            if(val && Filter.nsfw.param_values.on.includes(val))
-                Filter.nsfw.element.checked = true;
-            else
-            {
-                try
-                {
-                    if(localStorage.getItem(Filter.nsfw.param))
-                        localStorage.removeItem(Filter.nsfw.param);
-                }
-                catch(e)
-                {
-                    if(e instanceof window.SecurityError)
-                        LOG.warn(`Local storage is not available or disabled (Error[${e.code}]: ${e.message}).`);
-                    else
-                        LOG.warn(`Unable to gain access to local storage (Error[${e.code}]: ${e.message}).`);
-                }
-            }
+            let val = localStorage.getItem(Filter.nsfw.param);
 
-            url.searchParams.delete(Filter.nsfw.param);
-            window.history.replaceState(null, null, url);
+            if(val !== null)
+                Filter.nsfw.element.checked = val;
         }
-        else
+        catch(e)
         {
-            try
-            {
-                let val = localStorage.getItem(Filter.nsfw.param);
-                if(val)
-                    Filter.nsfw.element.checked = val;
-
-            }
-            catch(e)
-            {
-                if(e instanceof window.SecurityError)
-                    LOG.warn(`Local storage is not available or disabled (Error[${e.code}]: ${e.message}).`);
-                else
-                    LOG.warn(`Unable to gain access to local storage (Error[${e.code}]: ${e.message}).`);
-            }
+            if(e instanceof window.SecurityError)
+                LOG.warn(`Local storage is not available or disabled (Error[${e.code}]: ${e.message}).`);
+            else
+                LOG.warn(`Unable to gain access to local storage (Error[${e.code}]: ${e.message}).`);
         }
     }
 
