@@ -1,0 +1,11 @@
+{
+    "name": "xeloses/sg-nsfw-filter",
+    "type": "project",
+    "description": "NSFW games filter for SteamGifts",
+    "keywords": ["userscript", "steamgifts"],
+    "homepage": "https://github.com/Xeloses/sg-nsfw-filter",
+    "license": "GPL-3.0",
+    "authors": [
+        {"name": "Xeloses"}
+    ],
+}
