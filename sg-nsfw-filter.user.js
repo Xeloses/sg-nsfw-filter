@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         SteamGifts: NSFW games filter
-// @description  NSFW games filter for SteamGifts.
+// @description  Filter out NSFW games on SteamGifts.
 // @author       Xeloses
-// @version      0.0.1.1
+// @version      0.0.2.1
 // @copyright    Copyright (C) 2023, by Xeloses
 // @license      GPL-3.0 (https://www.gnu.org/licenses/gpl-3.0.html)
 // @namespace    Xeloses.SG.NSFWFilter
@@ -38,21 +38,31 @@
     const Blocklist = {
         developers: [],
         publishers: [],
-        content_descriptors: [1,3,4]
+        content_descriptors: [/*1,*/ 3, 4]
+    };
+
+    /*
+     * @const Whitelist (by AppID, Developer and Publisher).
+     */
+    const Whitelist = {
+        appids: [],
+        developers: [],
+        publishers: [
+            'AKSYS GAMES',
+            'GINORMOCORP HOLDINGS LTD'
+        ]
     };
 
     /*
      * @const SteamGifts pages to be processed by script with CSS selectors for those pages.
      */
     const SG = {
-        /* Pages matching full address (without domain) */
         Pages: {
             '/': '.giveaway__row-outer-wrap', // SG homepage
             '/giveaways': '.giveaway__row-outer-wrap', // SG homepage
             '/giveaways/search': '.giveaway__row-outer-wrap', // Giveaways search
             '/search/giveaways': '.giveaway__row-outer-wrap'  // Giveaways search
         },
-        /* Pages matching address by RegExp (without domain) */
         PagesRegex: {
             '^\\/user\\/[^\\/]+$': '.giveaway__row-outer-wrap', // User' giveaways
             '^\\/group\\/[\\w]{5}\\/[^\\/]+$': '.giveaway__row-outer-wrap' // Group' giveaways
@@ -72,26 +82,15 @@
     }
 
     /*
-     * @const Userscript Storage ID.
-     */
-    const STORAGE_ID = 'NSFWGames';
-
-    /*
-     * @var Requests counter.
-     */
-    let count_requests = 0;
-
-    /*
      * @const Filter elements.
      */
     const Filter = {
+        id: 'xnsfw_filter_form',
+        caption: 'NSFW Games',
         nsfw: {
             id: 'xnsfw_filter',
+            label: 'Hide NSFW games',
             param: 'XelFilter:nsfw',
-            param_values: {
-                on:  ['no','hide','off'],
-                off: ['yes','show','on']
-            },
             type: 'checkbox',
             element: null,
             default: false, // default value
@@ -107,6 +106,16 @@
         element: null,
         count: 0
     }
+
+    /*
+     * @const Userscript Storage ID.
+     */
+    const STORAGE_ID = 'NSFWGames';
+
+    /*
+     * @var Requests counter.
+     */
+    let count_requests = 0;
 
     /*
      * @class     XelLog
@@ -140,18 +149,19 @@
      */
     class XelUserscriptStorage
     {
-        constructor(name){ if(!name || !name.trim().length) throw new Error('XelUserscriptStorage error: could not create object instance with empty "name".'); this.name = name.trim(); this._e = {}; this._d = null; this.load(); }
+        constructor(name){ if(!name || !name.trim().length) throw new Error('XelUserscriptStorage error: could not create object instance with empty "name".'); this.name = name.trim(); this._e = {}; this._d = null; if(!this._update()) this.load(); }
         load(){ try{ let data = JSON.parse(GM_getValue(this.name, [])); this._d = new Map( data ? data : [] ); }catch(e){ this._d = new Map(); } this._trigger('load'); return this; }
         save(){ if(this._d) GM_setValue(this.name, JSON.stringify(Array.from(this._d))); this._trigger('save'); return this; }
         has(name){ return this._d.has(name); }
         get(name){ return this._d.has(name) ? this._d.get(name) : null; }
         add(name,value){ return this.set(name,value); }
         set(name,value){ this._d.set(name,value); return this; }
-        clear(){ this._d = new Map(); return this.save(); }
+        clear(){ this._d = new Map(); this._trigger('clear'); return this.save(); }
         count(){ return (this._d) ? this._d.size : 0; }
         empty(){ return this.count() > 0; }
         on(name, callback){ if(!this._e[name]) this._e[name] = []; this._e[name].push(callback); return this; }
-        _trigger(name, data){ if(!this._e[name] || !this._e[name].length) return;this._e[name].forEach(callback => callback(data));return this; }
+        _trigger(name, data){ if(!this._e[name] || !this._e[name].length) return; this._e[name].forEach(callback => callback(data));return this; }
+        _update(){ let reset = true, v = GM_getValue(`${this.name}_version`, null); if(v != GM_info.script.version){GM_setValue(`${this.name}_version`, GM_info.script.version); if(reset){this._trigger('update'); this.clear(); return true;}} return false; }
     }
 
     /*
@@ -198,16 +208,17 @@
 
         if(document.getElementById(id)) return;
 
-        const css = `#xnsfw_filter_form dl {width: 100%; padding: 6px 10px;}
-                     #xnsfw_filter_form dt {display: inline-block; width: 75%; text-align: left;}
-                     #xnsfw_filter_form dd {display: inline-block; width: 20%; text-align: right;}
-                     #xnsfw_filter_form input {width: auto;}
-                     #xnsfw_filter_form input[type=checkbox]:enabled,  #xnsfw_filter_form label          {cursor: pointer;}
-                     #xnsfw_filter_form input[type=checkbox]:disabled, #xnsfw_filter_form label.inactive {cursor: not-allowed; filter: opacity(.5);}
-                     #xnsfw_filter_form label {caret-color: transparent;}
-                     #xnsfw_filter_form label .fa          {display: none; margin: 0 5px;}
-                     #xnsfw_filter_form label.inactive .fa {display: inline-block;}
-                     #xnsfw_filter_counter {font-style: italic; filter: opacity(.5);} `;
+        const css = `#${Filter.id} dl {width: 100%; padding: 6px 10px;}
+                     #${Filter.id} dt {display: inline-block; width: 75%; text-align: left;}
+                     #${Filter.id} dd {display: inline-block; width: 20%; text-align: right;}
+                     #${Filter.id} input {width: auto;}
+                     #${Filter.id} input[type=checkbox]:enabled,  #${Filter.id} label          {cursor: pointer;}
+                     #${Filter.id} input[type=checkbox]:disabled, #${Filter.id} label.inactive {cursor: not-allowed; filter: opacity(.5);}
+                     #${Filter.id} label {caret-color: transparent;}
+                     #${Filter.id} label .fa          {display: none; margin: 0 5px;}
+                     #${Filter.id} label.inactive .fa {display: inline-block;}
+                     #${nsfw_counter.id} {font-style: italic; filter: opacity(.5);}
+                     .giveaway__row-outer-wrap[data-nsfw="yes"] .giveaway__heading__name::before {content: "[NSFW]"; font-family: "Monaco", "Courier New", "Courier", monospace; font-size: .6em; color: pink; margin-right: 2px; vertical-align: top;}`;
 
         const el = document.createElement('STYLE');
         el.type = 'text/css';
@@ -250,14 +261,13 @@
 
         try
         {
-            localStorage.setItem(Filter.nsfw.param, val);
+            localStorage.setItem(Filter.nsfw.param, Number(val));
         }
         catch(e){}
 
         if(nsfw_counter.count)
         {
             const GAs = document.getElementsByClassName('giveaway__row-outer-wrap');
-
             for(let ga of GAs)
                 ga.style.display = (val && ga.dataset.nsfw == 'yes') ? 'none' : 'block';
         }
@@ -275,7 +285,7 @@
             let val = localStorage.getItem(Filter.nsfw.param);
 
             if(val !== null)
-                Filter.nsfw.element.checked = val;
+                Filter.nsfw.element.checked = (Number(val) === 1);
         }
         catch(e)
         {
@@ -293,10 +303,9 @@
      */
     function renderFilterForm()
     {
-        let caption = 'NSFW Games',
-            html = `<form action="javascript:return false;" id="xnsfw_filter_form">
+        let html = `<form action="javascript:return false;" id="${Filter.id}">
                        <dl>
-                           <dt><label for="${Filter.nsfw.id}" ${Filter.nsfw.enabled ? '' : 'class="inactive"'}>Hide NSFW games <span id="${nsfw_counter.id}">(loading...)</span><i class="fa fa-spinner fa-pulse"></i></label></dt>
+                           <dt><label for="${Filter.nsfw.id}" ${Filter.nsfw.enabled ? '' : 'class="inactive"'}>${Filter.nsfw.label} <span id="${nsfw_counter.id}">(loading...)</span><i class="fa fa-spinner fa-pulse"></i></label></dt>
                            <dd><input id="${Filter.nsfw.id}" type="${Filter.nsfw.type}" ${Filter.nsfw.default ? 'checked' : ''} ${Filter.nsfw.enabled ? '' : 'disabled'} /></dd>
                        </dl>
                    </form>`;
@@ -306,7 +315,7 @@
 
         el = document.createElement('DIV');
         el.classList.add('sidebar__heading');
-        el.innerText = caption;
+        el.innerText = Filter.caption;
         container.appendChild(el);
 
         el = document.createElement('DIV');
@@ -317,10 +326,9 @@
         Filter.nsfw.element = document.getElementById(Filter.nsfw.id);
         nsfw_counter.element = document.getElementById(nsfw_counter.id);
 
+        initFilter();
         Filter.nsfw.element.addEventListener('change', applyFilter);
         el.querySelector('label').addEventListener('focus', function(){ document.getElementById(this.htmlFor).focus(); });
-
-        initFilter();
     }
 
     /**
@@ -331,6 +339,8 @@
      */
     async function loadGameInfo(id)
     {
+        if(Whitelist.appids.includes(id)) return false;
+
         await _sleep(330); // wait 330ms (0.33s) to prevent spamming requests
 
         const data = await _fetch(URLs.API.Steam.Game.replace('{%appid%}', id));
@@ -338,7 +348,20 @@
 
         if(data && data[id] && data[id].success)
         {
+            data[id].data.developers.forEach((val, i)=>{ data[id].data.developers[i] = val.toUpperCase(); });
+            data[id].data.publishers.forEach((val, i)=>{ data[id].data.publishers[i] = val.toUpperCase(); });
+
             let i = 0;
+
+            if(Whitelist.developers.length)
+                for(i = 0; i < data[id].data.developers.length; i++)
+                    if(Whitelist.developers.includes(data[id].data.developers[i]))
+                        return false;
+
+            if(Whitelist.publishers.length)
+                for(i = 0; i < data[id].data.publishers.length; i++)
+                    if(Whitelist.publishers.includes(data[id].data.publishers[i]))
+                        return false;
 
             if(Blocklist.developers.length)
                 for(i = 0; i < data[id].data.developers.length; i++)
@@ -455,9 +478,9 @@
      */
     function process(sel)
     {
-        processList(sel);
         injectCSS();
         renderFilterForm();
+        processList(sel);
         LOG.info(`App loaded (version: ${LOG.version})`);
     }
 
