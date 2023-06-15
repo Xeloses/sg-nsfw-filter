@@ -18,6 +18,8 @@ Allows to hide giveaways of NSFW games on [SteamGifts](https://www.steamgifts.co
   * "Some Nudity or Sexual Content" *(games can have this descriptor, for example, because of feature to manually undress character, or few scenes with swimsuits)*,
   * "General Mature Content" *(games can have this descriptor, for example, because of offensive language, or violence scenes)*.
 
+> Important: script can not process process games unavailable in your country (because Steam API does not allow to retrieve info about region restricted games)!
+
 ### Steamgifts pages processed by script:
 * Home page
 * Giveaway page
