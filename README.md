@@ -44,15 +44,15 @@ To reduce the count of requests to the Steam API server (and prevent blocking/bl
 ## Preview
 * Filter control (places in the left bar under navigation links):
 
-![Preview](https://raw.githubusercontent.com/Xeloses/sg-nsfw-filter/master/img/preview.jpg)
+![Preview](img/preview.jpg)
 
 * Filter control while loading games info:
 
-![Preview](https://raw.githubusercontent.com/Xeloses/sg-nsfw-filter/master/img/preview-loading.jpg)
+![Preview](img/preview-loading.jpg)
 
 * NSFW game mark:
 
-![Preview](https://raw.githubusercontent.com/Xeloses/sg-nsfw-filter/master/img/preview-mark.jpg)
+![Preview](img/preview-mark.jpg)
 
 ## Installation:
 1. Install **"Tampermonkey"** addon for your browser:
