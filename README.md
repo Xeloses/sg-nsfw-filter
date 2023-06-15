@@ -1,8 +1,8 @@
 # NSFW games filter for SteamGifts (beta)
 
-Usercript for SteamGifts.
+Usercript for [SteamGifts](https://www.steamgifts.com/).
 
-Allows to hide giveaways of NSFW games on SteamGifts.
+Allows to hide giveaways of NSFW games on [SteamGifts](https://www.steamgifts.com/).
 
 ## Features
 * Hide games with following content descriptors:
